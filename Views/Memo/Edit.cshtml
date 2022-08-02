@@ -1,0 +1,11 @@
+﻿@model MemoProject.Models.Memo.MemoViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<partial model="@Model" name="_MemoEditModalPartial" />
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
