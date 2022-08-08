@@ -2,13 +2,16 @@
 using MemoProject.Contracts;
 using MemoProject.Data;
 using MemoProject.Helpers;
+using MemoProject.Models.DataTable;
 using MemoProject.Models.Memo;
+using MemoProject.Models.Response;
 using MemoProject.Models.Result;
 using MemoProject.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static MemoProject.Common.Enums;
 
@@ -22,7 +25,7 @@ namespace MemoProject.Services
         private readonly ILogger<Memo> _logger;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public MemoService(IUnitOfWork unitofWork, IMapper mapper, ILogger<Memo> logger,  UserManager<IdentityUser> userManager)
+        public MemoService(IUnitOfWork unitofWork, IMapper mapper, ILogger<Memo> logger, UserManager<IdentityUser> userManager)
         {
             _unitofWork = unitofWork;
             _mapper = mapper;
@@ -63,13 +66,13 @@ namespace MemoProject.Services
             }
         }
 
-        public async Task<Result<IEnumerable<MemoViewModel>>> FetchAll()
+        public async Task<Result<List<MemoViewModel>>> FetchAll()
         {
-            Result<IEnumerable<MemoViewModel>> result = new();
+            Result<List<MemoViewModel>> result = new();
             try
             {
                 var memos = await _unitofWork.Memo.FindAll();
-                var memoList = _mapper.Map<IEnumerable<MemoViewModel>>(memos);
+                var memoList = _mapper.Map<List<MemoViewModel>>(memos);
                 result.Succedded = true;
                 result.Message = "Success";
                 result.Value = memoList;
@@ -118,7 +121,7 @@ namespace MemoProject.Services
 
         public async Task<Result<MemoViewModel>> Update(MemoViewModel memoDTO)
         {
-            
+
             Result<MemoViewModel> result = new();
             try
             {
@@ -127,14 +130,14 @@ namespace MemoProject.Services
                 {
                     Id = memoDTO.Id,
                     Title = memoDTO.Title,
-                    Note = memoDTO.Note,                    
+                    Note = memoDTO.Note,
                     UserId = memoDTO.UserId,
                     CreatedAt = memoDTO.CreatedAt,
                     StatusId = memoDTO.StatusId
                 };
                 var tags = memoDTO.Tags;
                 var tagsList = tags.Split(' ');
-                
+
 
                 foreach (var tagItem in tagsList)
                 {
@@ -168,10 +171,10 @@ namespace MemoProject.Services
         public async Task<Result<CreateMemoViewModel>> Create(string userId, CreateMemoViewModel memoDTO)
         {
             Result<CreateMemoViewModel> result = new();
-            
+
             try
             {
-                
+
                 Memo memo = new();
                 memo.UserId = userId;
                 memo.StatusId = (int)StatusEnum.Active;
@@ -180,8 +183,8 @@ namespace MemoProject.Services
                 var tagsList = tags.Split(' ');
                 memo.Title = memoDTO.Title;
                 memo.Note = memoDTO.Note;
-                
-                foreach(var tagItem in tagsList)
+
+                foreach (var tagItem in tagsList)
                 {
                     Tag tag = new();
                     tag.Name = tagItem;
@@ -213,6 +216,85 @@ namespace MemoProject.Services
                 return result;
             }
         }
+        public IQueryable<Memo> GetMemoQuery()
+        {
+            return _unitofWork.Memo.FindAllQ();
+        }
+
+
+        public async Task<DataTableModel> GetDataAsync(PaginatedResponse settings)
+        {
+
+            var results = await _unitofWork.Memo.FindAll();
+            var resultsDTO = new List<MemoViewModel>();
+            foreach (var item in results)
+            {
+
+                resultsDTO.Add(_mapper.Map<MemoViewModel>(item));
+            }
+
+            // Total count matching search criteria 
+
+            // Total Records Count
+            var recordsTotalCount = resultsDTO.Count();
+
+            // Filtered & Sorted & Paged data to be sent from server to view
+            List<MemoViewModel> filteredData = null;
+            if (settings.SortColumnDirection == "asc")
+            {
+
+                filteredData =
+                     resultsDTO
+                    .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
+                    .OrderBy(a => a.Title)//Sort by sortColumn
+                    .Skip(settings.Skip)
+                    .Take(settings.PageSize)
+                    .ToList();
+
+
+            }
+            else
+            {
+                filteredData =
+                    resultsDTO
+                   .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
+                   .OrderByDescending(x => x.Title)
+                   .Skip(settings.Skip)
+                   .Take(settings.PageSize)
+                   .ToList();
+            }
+            /*
+            var viewModelList = new List<MemoViewModel>();
+            var memoDto = new MemoViewModel();
+            if (filteredData != null)
+            {
+                foreach (var memo in filteredData)
+                {
+                    viewModelList.Add(memo);
+                }
+            }
+            else
+            {
+                foreach (var memo in resultsDTO)
+                {
+                    viewModelList.Add(memo);
+                }
+            }
+            */
+            int recordsFilteredCount =
+                    resultsDTO
+                    .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
+                    .Count();
+            var dataTableParams = new DataTableModel();
+
+            dataTableParams.MemoList = filteredData;
+            dataTableParams.RecordsFiltered = recordsFilteredCount;
+            dataTableParams.RecordsTotal = recordsTotalCount;
+
+            return dataTableParams;
+
+        }
+
 
     }
 

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MemoProject.Models.Memo.MemoViewModel>
+﻿@model List<MemoViewModel>
 @{
     ViewData["Title"] = "Index";
 }
@@ -15,21 +15,20 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Title)
+                Title
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Note)
+                Note
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
+                CreatedAt
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.StatusId)
+                StatusId
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th></th>
+                UserId
+            </th>            
         </tr>
     </thead>
     <tbody>
@@ -43,20 +42,14 @@
                     @Html.DisplayFor(modelItem => item.Note)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreatedAt)
-                </td>
-                <td>
                     @Html.DisplayFor(modelItem => item.StatusId)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.UserId)
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
                 </td>
                 <td>
-                    <button type="button" class="btn btn-primary edit" data-id="@item.Id">Edit</button>
-
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                </td>
-
+                    @Html.DisplayFor(modelItem => item.UserId)
+                </td>           
             </tr>
         }
     </tbody>
@@ -68,16 +61,38 @@
 @section Scripts{
     <script src="~/lib/datatables/js/jquery.dataTables.js"></script>
     <script src="~/lib/datatables/js/dataTables.bootstrap4.js"></script>
-    
+
     <script>
-        onload = event => {
+        $(document).ready(function () {
             $('#MemoTable').DataTable({
+                "ajax": {
+                    "url": 'Memo/GetFilteredItems',
+                    "type": "POST",
+                    "dataType": "json",
+                    data: function (settings) {
+                        obj = settings;
+                    }
+
+                },
+                "columns": [
+                    { "data": "title", "name": "Title" },
+                    { "data": "note", "name": "Note" },
+                    { "data": "createdAt", "name": "CreatedAt" },
+                    { "data": "statusId", "name": "StatusId" },
+                    { "data": "userId", "name": "UserId" }
+                ],
+                "serverSide": true,
+                "order": [0, "asc"],
+                "processing": true,
+                "searching": true,
+                "paging": true
+
             });
             $('.btn.edit').click(event => {
                 const id = $(event.currentTarget).data("id");
                 $("#editModalContainer").load(`/Memo/Edit/${id}`, _ => $("#editModal").modal("show"));
             });
-        };
+        });
     </script>
 }
 

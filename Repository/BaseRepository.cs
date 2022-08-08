@@ -33,7 +33,7 @@ namespace MemoProject.Repository
             _context.Set<T>().Remove(entity);
         }
 
-        public async Task<IEnumerable<T>> FindAll()
+        public async Task<List<T>> FindAll()
         {
             return await _context.Set<T>().ToListAsync();
         }

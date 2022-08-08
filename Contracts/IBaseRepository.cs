@@ -9,7 +9,7 @@ namespace MemoProject.Contracts
         Task CreateAsync(T memo);
         void Delete(T entity);
         void DeleteByID(long id);
-        Task<IEnumerable<T>> FindAll();
+        Task<List<T>> FindAll();
         Task<T> FindById(long id);
         void Update(T memo);
         IQueryable<T> FindAllQ();

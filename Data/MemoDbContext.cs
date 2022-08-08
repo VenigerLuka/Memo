@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MemoProject.Models.Memo;
 
 #nullable disable
 
@@ -41,6 +42,8 @@ namespace MemoProject.Data
 
 
         }
+
+        public DbSet<MemoProject.Models.Memo.MemoViewModel> MemoViewModel { get; set; }
 
 
     }

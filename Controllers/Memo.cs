@@ -1,11 +1,15 @@
 ﻿using MemoProject.Contracts;
 using MemoProject.Helpers;
 using MemoProject.Models.Memo;
+using MemoProject.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MemoProject.Controllers
@@ -29,17 +33,19 @@ namespace MemoProject.Controllers
 
 
 
-        // GET: Memo
+        //GET: Memo
         public async Task<IActionResult> Index()
         {
             var result = await _memoService.FetchAll();
             if (result.Succedded)
-            {            
+            {
                 return View(result.Value);
             }
 
             return Json(result.Message);
         }
+
+
 
         // GET: Memo/Details/5
         public async Task<IActionResult> Details(long id)
@@ -102,8 +108,8 @@ namespace MemoProject.Controllers
             {
                 return NotFound();
             }
-            var user = await  _userManager.GetUserAsync(User);
-           
+            var user = await _userManager.GetUserAsync(User);
+
 
             if (ModelState.IsValid)
             {
@@ -152,11 +158,27 @@ namespace MemoProject.Controllers
             }
             return Json(searchResult.Message);
         }
+        [HttpPost]
+        public async Task<JsonResult> GetFilteredItems()
+        {
+            var model = new PaginatedResponse
+            {
+                PageSize = Request.Form["length"].FirstOrDefault() != null ? Convert.ToInt32(Request.Form["length"].FirstOrDefault()) : 0,
+                Skip = Request.Form["start"].FirstOrDefault() != null ? Convert.ToInt32(Request.Form["start"].FirstOrDefault()) : 0,
+                SearchValue = Request.Form["search[value]"].FirstOrDefault(),
+                SortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][title]"].FirstOrDefault(),
+                SortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault()
+            };
+            var memos = await _memoService.GetDataAsync(model);
 
-        //private bool MemoViewModelExists(long id)
-        //{
-        //    //return _context.MemoViewModel.Any(e => e.Id == id);
-        //    return 
-        //}
+            return Json(new{
+                            draw = Convert.ToInt32(Request.Form["draw"]),
+                            recordsFiltered = memos.RecordsFiltered,
+                            recordsTotal = memos.RecordsTotal,
+                            data = memos.MemoList
+                        }
+                    );
+        }
+
     }
 }
