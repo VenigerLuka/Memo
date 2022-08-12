@@ -1,9 +1,5 @@
-﻿using MemoProject.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using MemoProject.Helpers;
+﻿using MemoProject.Contracts;
+using MemoProject.Data;
 
 namespace MemoProject.Repository
 {

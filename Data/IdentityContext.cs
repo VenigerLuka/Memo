@@ -2,28 +2,27 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using MemoProject.Models.Memo;
-
-#nullable disable
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MemoProject.Data
 {
-    public partial class MemoDbContext : DbContext
+    public partial class IdentityContext : IdentityDbContext<IdentityUser, IdentityRole<string>, string>
     {
-        public MemoDbContext()
+        public IdentityContext()
         {
         }
 
-        public MemoDbContext(DbContextOptions<MemoDbContext> options)
+        public IdentityContext(DbContextOptions<IdentityContext> options)
             : base(options)
         {
         }
 
 
-        public virtual DbSet<Memo> Memo { get; set; }
-        public virtual DbSet<Setting> Setting { get; set; }
-        public virtual DbSet<Status> Status { get; set; }
-        public virtual DbSet<Tag> Tag { get; set; }
+       
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -36,13 +35,14 @@ namespace MemoProject.Data
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {      
+        {
+            modelBuilder.ApplyConfiguration(new IdentityRoleConfiguration());
+            base.OnModelCreating(modelBuilder);
 
 
         }
 
-        public DbSet<MemoProject.Models.Memo.MemoViewModel> MemoViewModel { get; set; }
-
 
     }
 }
+

@@ -1,4 +1,5 @@
-﻿using MemoProject.Data;
+﻿using MemoProject.Contracts;
+using MemoProject.Data;
 using System.Threading.Tasks;
 
 namespace MemoProject.Repository
@@ -17,7 +18,6 @@ namespace MemoProject.Repository
             _context = context;
             Memo = new MemoRepository(_context);
             Tag = new TagRepository(_context);
-            Admin = new AdminRepository(_context);
             
         }
 

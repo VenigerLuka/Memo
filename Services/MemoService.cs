@@ -47,7 +47,7 @@ namespace MemoProject.Services
                     result.Value = null;
                     return result;
                 }
-                _unitofWork.Memo.DeleteByID(id);
+                await _unitofWork.Memo.DeleteByID(id);
                 result.Succedded = true;
                 result.Message = "Deleted successfuly";
                 result.Value = null;

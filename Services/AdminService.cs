@@ -24,15 +24,14 @@ namespace MemoProject.Services
         public Result<IEnumerable<IdentityUser>> FetchAll()
         {
             Result<IEnumerable<IdentityUser>> result = new();
-            result.Value = _unitOfWork.Admin.FindAll();
-            result.Succedded = true;
+            result.Value = _userManager.Users.ToList();
             return result;
         }
 
         public async Task<Result<NoValue>> EditRole(string userId, string role)
         {
             Result<NoValue> result = new();
-            var user = await _unitOfWork.Admin.FindById(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             await _userManager.AddToRoleAsync(user, role);
             result.Succedded = true;
 

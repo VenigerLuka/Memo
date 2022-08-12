@@ -32,6 +32,9 @@ namespace MemoProject
             services.AddDbContext<MemoDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<IdentityContext>(options =>
+               options.UseSqlServer(
+                   Configuration.GetConnectionString("DefaultConnection")));
             services.AddDatabaseDeveloperPageExceptionFilter();
 
 
@@ -66,7 +69,7 @@ namespace MemoProject
             })
                 .AddRoles<IdentityRole<string>>()                
                 .AddSignInManager<SignInManager<IdentityUser>>()
-                .AddEntityFrameworkStores<MemoDbContext>()
+                .AddEntityFrameworkStores<IdentityContext>()
                 .AddDefaultTokenProviders();
 
             /*

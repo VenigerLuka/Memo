@@ -4,7 +4,7 @@ using MemoProject.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MemoProject.Repository
+namespace MemoProject.Contracts
 {
     public interface IMemoRepository : IBaseRepository<Memo>
     {

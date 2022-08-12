@@ -23,10 +23,10 @@ namespace MemoProject.Repository
             await _context.Set<T>().AddAsync(memo);
         }
 
-        public void DeleteByID(long id)
+        public async Task DeleteByID(long id)
         {
-            var memo = _context.Memo.Find(id);
-            _context.Memo.Remove(memo);
+            var memo = await _context.Set<T>().FindAsync(id);
+            _context.Set<T>().Remove(memo);
         }
         public void Delete(T entity)
         {

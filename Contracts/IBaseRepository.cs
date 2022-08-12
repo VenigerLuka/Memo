@@ -8,7 +8,7 @@ namespace MemoProject.Contracts
     {
         Task CreateAsync(T memo);
         void Delete(T entity);
-        void DeleteByID(long id);
+        Task DeleteByID(long id);
         Task<List<T>> FindAll();
         Task<T> FindById(long id);
         void Update(T memo);

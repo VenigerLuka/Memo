@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using MemoProject.Contracts;
+using System.Threading.Tasks;
 
 namespace MemoProject.Repository
 {
