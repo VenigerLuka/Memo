@@ -6,12 +6,12 @@ namespace MemoProject.Contracts
 {
     public interface IBaseRepository<T> where T : class
     {
-        Task CreateAsync(T memo);
+        Task CreateAsync(T entity);
         void Delete(T entity);
         Task DeleteByID(long id);
         Task<List<T>> FindAll();
         Task<T> FindById(long id);
-        void Update(T memo);
-        IQueryable<T> FindAllQ();
+        void Update(T entity);
+        Task<IQueryable<T>> FindAllQ();
     }
 }

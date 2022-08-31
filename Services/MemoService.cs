@@ -3,7 +3,7 @@ using MemoProject.Contracts;
 using MemoProject.Data;
 using MemoProject.Helpers;
 using MemoProject.Models.DataTable;
-using MemoProject.Models.Memo;
+using MemoProject.Models.Memos;
 using MemoProject.Models.Response;
 using MemoProject.Models.Result;
 using MemoProject.Repository;
@@ -18,16 +18,17 @@ using static MemoProject.Common.Enums;
 namespace MemoProject.Services
 {
 
-    public class MemoService : IMemoService
+    public class MemoService : ServiceBase, IMemoService
     {
-        private readonly IUnitOfWork _unitofWork;
+        
         private readonly IMapper _mapper;
         private readonly ILogger<Memo> _logger;
         private readonly UserManager<IdentityUser> _userManager;
 
         public MemoService(IUnitOfWork unitofWork, IMapper mapper, ILogger<Memo> logger, UserManager<IdentityUser> userManager)
+        :base(unitofWork)
         {
-            _unitofWork = unitofWork;
+           
             _mapper = mapper;
             _logger = logger;
             _userManager = userManager;
@@ -39,7 +40,7 @@ namespace MemoProject.Services
             try
             {
 
-                var toDelete = await _unitofWork.Memo.FindById(id);
+                var toDelete = await _unitOfWork.Memo.FindById(id);
                 if (toDelete is null)
                 {
                     result.Succedded = false;
@@ -47,11 +48,11 @@ namespace MemoProject.Services
                     result.Value = null;
                     return result;
                 }
-                await _unitofWork.Memo.DeleteByID(id);
+                await _unitOfWork.Memo.DeleteByID(id);
                 result.Succedded = true;
                 result.Message = "Deleted successfuly";
                 result.Value = null;
-                await _unitofWork.CommitAsync();
+                await _unitOfWork.CommitAsync();
                 return result;
 
             }
@@ -66,16 +67,31 @@ namespace MemoProject.Services
             }
         }
 
-        public async Task<Result<List<MemoViewModel>>> FetchAll()
+        public async Task<Result<List<MemoViewModel>>> FetchAll(string userId)
         {
+            Setting setting = await GetSettingByUserIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             Result<List<MemoViewModel>> result = new();
+            List<MemoViewModel> memoVMs = new();
             try
             {
-                var memos = await _unitofWork.Memo.FindAll();
-                var memoList = _mapper.Map<List<MemoViewModel>>(memos);
+                List<Memo> memos = await _unitOfWork.Memo.FindAll();
+                if (await _userManager.IsInRoleAsync(user, "Admin") == true)
+                {                
+                    memoVMs = memos
+                    .Select(memo => new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat))
+                    .ToList();
+                }
+                else
+                {
+                    memoVMs = memos
+                   .Where(memo => memo.UserId == userId)
+                   .Select(memo => new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat))
+                   .ToList();
+                }
                 result.Succedded = true;
                 result.Message = "Success";
-                result.Value = memoList;
+                result.Value = memoVMs;
                 return result;
 
             }
@@ -95,7 +111,7 @@ namespace MemoProject.Services
             try
             {
 
-                var search = await _unitofWork.Memo.FindById(id);
+                var search = await _unitOfWork.Memo.FindById(id);
                 if (search == null)
                 {
                     result.Succedded = false;
@@ -119,39 +135,22 @@ namespace MemoProject.Services
 
         }
 
-        public async Task<Result<MemoViewModel>> Update(MemoViewModel memoDTO)
+        public async Task<Result<MemoViewModel>> Update(string userId, MemoViewModel memoDTO)
         {
 
             Result<MemoViewModel> result = new();
             try
             {
-
-                Memo editMemo = new()
-                {
-                    Id = memoDTO.Id,
-                    Title = memoDTO.Title,
-                    Note = memoDTO.Note,
-                    UserId = memoDTO.UserId,
-                    CreatedAt = memoDTO.CreatedAt,
-                    StatusId = memoDTO.StatusId
-                };
-                var tags = memoDTO.Tags;
-                var tagsList = tags.Split(' ');
-
-
-                foreach (var tagItem in tagsList)
-                {
-                    Tag tag = new();
-                    tag.Name = tagItem;
-                    tag.Memo = editMemo;
-                    await _unitofWork.Tag.CreateAsync(tag);
-                }
-
-
-
-                _unitofWork.Memo.Update(editMemo);
-                await _unitofWork.CommitAsync();
-                var editedCategory = _mapper.Map(editMemo, new MemoViewModel());
+                Setting setting = await GetSettingByUserIdAsync(userId);
+                var memo = await _unitOfWork.Memo.FindById(memoDTO.Id);
+                memo.Update(memoDTO.Note, memoDTO.Title);
+                await _unitOfWork.Tag.DeleteByMemoAsync(memo.Id);
+                var tags = memoDTO.Tags.Split(' ');                 
+                await _unitOfWork.Tag.AddRange(tags,memo);
+                
+                await _unitOfWork.CommitAsync();
+                var editedCategory = new MemoViewModel(memo,setting.DateFormat, setting.TimeFormat);
+                
                 result.Value = editedCategory;
                 result.Message = "Update Successful!";
                 result.Succedded = true;
@@ -179,24 +178,17 @@ namespace MemoProject.Services
                 memo.UserId = userId;
                 memo.StatusId = (int)StatusEnum.Active;
                 memo.CreatedAt = DateTime.UtcNow;
-                var tags = memoDTO.Tags;
-                var tagsList = tags.Split(' ');
                 memo.Title = memoDTO.Title;
                 memo.Note = memoDTO.Note;
 
-                foreach (var tagItem in tagsList)
-                {
-                    Tag tag = new();
-                    tag.Name = tagItem;
-                    tag.Memo = memo;
-                    await _unitofWork.Tag.CreateAsync(tag);
-                }
+                var tagsList = memoDTO.Tags.Split(' ');
+                await _unitOfWork.Tag.AddRange(tagsList.ToList(), memo);
 
                 //memo = _mapper.Map<Memo>(memoDTO);
 
 
-                await _unitofWork.Memo.CreateAsync(memo);
-                await _unitofWork.CommitAsync();
+                //await _unitOfWork.Memo.CreateAsync(memo);
+                await _unitOfWork.CommitAsync();
                 result.Message = "Created Successfuly";
 
                 //CreateMemoViewModel newMemoDto = new();
@@ -216,27 +208,37 @@ namespace MemoProject.Services
                 return result;
             }
         }
-        public IQueryable<Memo> GetMemoQuery()
+        
+
+
+        public async Task<DataTableModel> GetDataAsync(PaginatedResponse settings, string userId)
         {
-            return _unitofWork.Memo.FindAllQ();
-        }
-
-
-        public async Task<DataTableModel> GetDataAsync(PaginatedResponse settings)
-        {
-
-            var results = await _unitofWork.Memo.FindAll();
-            var resultsDTO = new List<MemoViewModel>();
-            foreach (var item in results)
+            var user = await _userManager.FindByIdAsync(userId);
+            Setting setting = await GetSettingByUserIdAsync(userId);
+            var results = await _unitOfWork.Memo.FindAll();
+            var memoVMs = new List<MemoViewModel>();
+            if (!await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                var perUserResults = results
+                    .Where(memo => memo.UserId == userId);
+                
+                memoVMs = perUserResults
+                    .Select(memo => new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat))
+                    .ToList();
+            }
+            else
             {
 
-                resultsDTO.Add(_mapper.Map<MemoViewModel>(item));
+                memoVMs = results
+                .Select(memo => new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat))
+                .ToList();
             }
+            
 
             // Total count matching search criteria 
 
             // Total Records Count
-            var recordsTotalCount = resultsDTO.Count();
+            var recordsTotalCount = memoVMs.Count();
 
             // Filtered & Sorted & Paged data to be sent from server to view
             List<MemoViewModel> filteredData = null;
@@ -244,7 +246,7 @@ namespace MemoProject.Services
             {
 
                 filteredData =
-                     resultsDTO
+                     memoVMs
                     .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
                     .OrderBy(a => a.Title)//Sort by sortColumn
                     .Skip(settings.Skip)
@@ -256,7 +258,7 @@ namespace MemoProject.Services
             else
             {
                 filteredData =
-                    resultsDTO
+                    memoVMs
                    .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
                    .OrderByDescending(x => x.Title)
                    .Skip(settings.Skip)
@@ -282,7 +284,7 @@ namespace MemoProject.Services
             }
             */
             int recordsFilteredCount =
-                    resultsDTO
+                    memoVMs
                     .Where(a => a.Title.Contains(settings.SearchValue) || a.Note.Contains(settings.SearchValue))
                     .Count();
             var dataTableParams = new DataTableModel();

@@ -1,9 +1,10 @@
-﻿@model MemoViewModel
+﻿@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer localizer
+@model MemoViewModel
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
     <div class=" modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-title">Edit Memo</h5>
+                <h5 class="modal-title" id="modal-title">@localizer["Edit Memo"]</h5>
                 <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">X</button>
             </div>
             <div class="modal-body">
@@ -29,10 +30,10 @@
                     <input type="hidden" asp-for="CreatedAt" />
                     <input type="hidden" asp-for="UserId" />
                     <input type="hidden" asp-for="StatusId" />
-                    
+
 
                     <div class="form-group">
-                        <input type="submit" value="Save" class="btn btn-primary" id="submitButton" />
+                        <input type="submit" value="@localizer["Save"]" class="btn btn-primary" id="submitButton" />
                     </div>
                 </form>
             </div>
@@ -40,19 +41,21 @@
         </div>
     </div>
 </div>
-<script>
-    onload = event => {
-        $("#submitButton").click(function () {
-            var formdata = $("#editForm").serialize();
-            $.ajax({
-                type: "POST",
-                url: `/Memo/Edit/`,
-                data: formdata,
-                success: function () {
-                    $('#editModal').hide();
-                }
+@section Scripts{
+    <script>
+        onload = event => {
+            $("#submitButton").click(function () {
+                var formdata = $("#editForm").serialize();
+                $.ajax({
+                    type: "POST",
+                    url: `/Memo/Edit/`,
+                    data: formdata,
+                    success: function () {
+                        $('#editModal').hide();
+                    }
 
+                })
             })
-        })
-    };
-</script>
+        };
+    </script>
+}

@@ -1,4 +1,5 @@
 ﻿@model List<MemoViewModel>
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer localizer
 @{
     ViewData["Title"] = "Index";
 }
@@ -9,26 +10,31 @@
 <div id="PlaceHolderHere"></div>
 
 <p>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal" id="toggleModal">Create</button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal" id="toggleModal">@localizer["Create"]</button>
 </p>
 <table class="table" id="MemoTable">
     <thead>
         <tr>
             <th>
-                Title
+                @localizer["Title"]
             </th>
             <th>
-                Note
+                @localizer["Note"]
             </th>
             <th>
-                CreatedAt
+                @localizer["CreatedAt"]
             </th>
             <th>
-                StatusId
+                @localizer["StatusId"]
             </th>
             <th>
-                UserId
-            </th>            
+                @localizer["UserId"]
+
+            </th>
+            <th>
+                Actions
+            </th>
+
         </tr>
     </thead>
     <tbody>
@@ -45,11 +51,12 @@
                     @Html.DisplayFor(modelItem => item.StatusId)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                    @Html.DisplayFor(modelItem => item.CreatedAt)               
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.UserId)
-                </td>           
+                </td>
+                
             </tr>
         }
     </tbody>
@@ -58,12 +65,39 @@
 <div id="editModalContainer">
 
 </div>
+
 @section Scripts{
     <script src="~/lib/datatables/js/jquery.dataTables.js"></script>
     <script src="~/lib/datatables/js/dataTables.bootstrap4.js"></script>
 
+
     <script>
         $(document).ready(function () {
+            document.body.addEventListener('click', function (event) {
+                if (event.target.id == 'deleteLink') {
+                    const id = $(event.currentTarget).data("id");
+                    bootbox.confirm("@localizer["Are you sure?"]", function (result) {
+                    if (result)
+                        window.location = `/Memo/`
+                });
+                };
+            });
+
+            $(".btn.edit").on("click", function () {
+                const id = $(event.currentTarget).data("id");
+                $("#editModalContainer").load(`/Memo/Edit/${id}`, _ => $("#editModal").modal("show"));
+            })
+            $("#deleteLink").on("click", function () {
+                var id = $(this).data('id');
+                bootbox.confirm("@localizer["Are you sure?"]", function (result) {
+                    if (result) {
+                        window.location = `/Memo/DeleteConfirmed/${id}`
+                        window.location.reload();
+
+                    };
+                });
+            });
+
             $('#MemoTable').DataTable({
                 "ajax": {
                     "url": 'Memo/GetFilteredItems',
@@ -79,20 +113,48 @@
                     { "data": "note", "name": "Note" },
                     { "data": "createdAt", "name": "CreatedAt" },
                     { "data": "statusId", "name": "StatusId" },
-                    { "data": "userId", "name": "UserId" }
+                    { "data": "userId", "name": "UserId" },
+                    {
+                        "data": "id", "name": "Actions",
+                        "render": function (data, type, row, meta){
+                            return '<button type="button" class="btn btn-primary edit" data-id=' + data + '>Edit</button>|  <a id="deleteLink"'+data+'" data-id=' + data + '> Delete</a >'
+                        }
+                    }
+
+
                 ],
                 "serverSide": true,
                 "order": [0, "asc"],
                 "processing": true,
                 "searching": true,
-                "paging": true
+                "paging": true,
+                "language":
+                {
+                    emptyTable: "@localizer["No data available in table"]",
+                    info: "@localizer["Showing _START_ to _END_ of _TOTAL_ entries"]",
+                    infoEmpty: "@localizer["Showing 0 to 0 of 0 entries"]",
+                    infoFiltered: "@localizer["(filtered from _MAX_ total entries)"]",
+                    infoPostFix: "",
+                    thousands: ",",
+                    lengthMenu: "@localizer["Show _MENU_ entries"]",
+                    loadingRecords: "@localizer["Loading..."]",
+                    processing: "@localizer["Processing..."]",
+                    search: "@localizer["Search:"]",
+                    zeroRecords: "@localizer["No matching records found"]",
+                    paginate: {
+                        first: "@localizer["First"]",
+                        last: "@localizer["Last"]",
+                        next: "@localizer["Next"]",
+                        previous: "@localizer["Previous"]",
+                    },
+                    aria: {
+                        sortAscending: "@localizer[": activate to sort column ascending"]",
+                        sortDescending: "@localizer[": activate to sort column descending"]"
+                    }
 
+                }
             });
-            $('.btn.edit').click(event => {
-                const id = $(event.currentTarget).data("id");
-                $("#editModalContainer").load(`/Memo/Edit/${id}`, _ => $("#editModal").modal("show"));
-            });
-        });
+         });
     </script>
 }
 

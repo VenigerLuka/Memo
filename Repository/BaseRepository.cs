@@ -11,16 +11,19 @@ namespace MemoProject.Repository
 
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
-        private readonly MemoDbContext _context;
+
+        public readonly MemoDbContext _context;
+        protected readonly DbSet<T> DbSet;
 
         public BaseRepository(MemoDbContext context)
         {
             _context = context;
+            DbSet = context.Set<T>();
         }
 
-        public async Task CreateAsync(T memo)
+        public async Task CreateAsync(T entity)
         {
-            await _context.Set<T>().AddAsync(memo);
+            await _context.Set<T>().AddAsync(entity);
         }
 
         public async Task DeleteByID(long id)
@@ -43,11 +46,11 @@ namespace MemoProject.Repository
             return await _context.Set<T>().FindAsync(id);
         }
 
-        public void Update(T memo)
+        public void Update(T entity)
         {
-            _context.Set<T>().Update(memo);
+            _context.Set<T>().Update(entity);
         }
-        public IQueryable<T> FindAllQ()
+        public async Task<IQueryable<T>> FindAllQ()
         {
             return _context.Set<T>()
                 .AsNoTracking();

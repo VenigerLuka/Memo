@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using MemoProject.Data;
-using MemoProject.Models.Memo;
+using MemoProject.Models.Memos;
 
 namespace MemoProject.Helpers
 {

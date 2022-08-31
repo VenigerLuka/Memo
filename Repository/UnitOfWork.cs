@@ -8,8 +8,7 @@ namespace MemoProject.Repository
     {
         public IMemoRepository Memo { get; private set; }
         public ITagRepository Tag { get; private set; }
-        public IAdminRepository Admin { get; private set; }
-        
+        public ISettingsReposirory Setting {get; private set; }
 
         protected readonly MemoDbContext _context;
 
@@ -18,6 +17,7 @@ namespace MemoProject.Repository
             _context = context;
             Memo = new MemoRepository(_context);
             Tag = new TagRepository(_context);
+            Setting = new SettingsRepository(_context);
             
         }
 

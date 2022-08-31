@@ -2,11 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MemoProject.Data
 {
@@ -19,18 +14,14 @@ namespace MemoProject.Data
         public IdentityContext(DbContextOptions<IdentityContext> options)
             : base(options)
         {
-        }
-
-
-       
-
+        }     
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 
-                optionsBuilder.UseSqlServer("Name=ConnectionStrings:DefaultConnection");
+                optionsBuilder.UseSqlServer("Name=ConnectionStrings:IdentityDbConnection");
             }
         }
 

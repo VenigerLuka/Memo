@@ -1,4 +1,4 @@
-﻿using MemoProject.Models.Memo;
+﻿using MemoProject.Models.Memos;
 using System;
 using System.Collections.Generic;
 using System.Linq;

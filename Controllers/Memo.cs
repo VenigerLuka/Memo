@@ -1,15 +1,16 @@
 ﻿using MemoProject.Contracts;
-using MemoProject.Helpers;
-using MemoProject.Models.Memo;
+using MemoProject.Extensions;
+using MemoProject.Models.Memos;
 using MemoProject.Models.Response;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MemoProject.Controllers
@@ -36,7 +37,7 @@ namespace MemoProject.Controllers
         //GET: Memo
         public async Task<IActionResult> Index()
         {
-            var result = await _memoService.FetchAll();
+            var result = await _memoService.FetchAll(User.GetId());
             if (result.Succedded)
             {
                 return View(result.Value);
@@ -66,9 +67,6 @@ namespace MemoProject.Controllers
             return PartialView("_MemoModalPartial", createModel);
         }
 
-        // POST: Memo/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateMemoViewModel memoViewModel)
@@ -102,20 +100,18 @@ namespace MemoProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.        
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id, [Bind("Id,Title,Note,CreatedAt,StatusId,UserId,Tags")] MemoViewModel memoViewModel)
+        public async Task<IActionResult> Edit(long id, MemoViewModel memoViewModel)
         {
             if (id != memoViewModel.Id)
             {
                 return NotFound();
             }
-            var user = await _userManager.GetUserAsync(User);
-
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _memoService.Update(memoViewModel);
+                    
+                    await _memoService.Update(User.GetId(), memoViewModel);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -131,17 +127,17 @@ namespace MemoProject.Controllers
 
 
 
-        // GET: Memo/Delete/5
-        public async Task<IActionResult> Delete(long id)
-        {
-            var result = await _memoService.FetchById(id);
-            if (!result.Succedded)
-            {
-                return Json(result.Message);
-            }
+        //// GET: Memo/Delete/5
+        //public async Task<IActionResult> Delete(long id)
+        //{
+        //    var result = await _memoService.FetchById(id);
+        //    if (!result.Succedded)
+        //    {
+        //        return Json(result.Message);
+        //    }
 
-            return View(result.Value);
-        }
+        //    return View(result.Value);
+        //}
 
         // POST: Memo/Delete/5
         [HttpPost, ActionName("Delete")]
@@ -169,7 +165,7 @@ namespace MemoProject.Controllers
                 SortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][title]"].FirstOrDefault(),
                 SortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault()
             };
-            var memos = await _memoService.GetDataAsync(model);
+            var memos = await _memoService.GetDataAsync(model, User.GetId());
 
             return Json(new{
                             draw = Convert.ToInt32(Request.Form["draw"]),
@@ -178,6 +174,15 @@ namespace MemoProject.Controllers
                             data = memos.MemoList
                         }
                     );
+        }
+        
+        public IActionResult SetLanguage(string culture)
+        {
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                new CookieOptions { Expires = DateTimeOffset.Now.AddYears(1), IsEssential = true, Secure = true });
+            return RedirectToAction(nameof(Index));
         }
 
     }

@@ -10,6 +10,8 @@ namespace MemoProject.Contracts
 {
     public interface ITagRepository : IBaseRepository<Tag>
     {
-        
+        Task<bool> AddRange(IEnumerable<string> tagList, Memo memo);
+        Task DeleteByMemoAsync(long memoId);
+
     }
 }

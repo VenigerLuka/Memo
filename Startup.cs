@@ -9,11 +9,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
+using System.Globalization;
 
 namespace MemoProject
 {
@@ -31,10 +34,10 @@ namespace MemoProject
         {
             services.AddDbContext<MemoDbContext>(options =>
                 options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+                    Configuration.GetConnectionString("MemoDbConnection")));
             services.AddDbContext<IdentityContext>(options =>
                options.UseSqlServer(
-                   Configuration.GetConnectionString("DefaultConnection")));
+                   Configuration.GetConnectionString("IdentityDbConnection")));
             services.AddDatabaseDeveloperPageExceptionFilter();
 
 
@@ -53,7 +56,7 @@ namespace MemoProject
                          };
                      });
 
-            
+
             services.AddIdentityCore<IdentityUser>((IdentityOptions options) =>
             {
                 //password settings
@@ -67,7 +70,7 @@ namespace MemoProject
                 options.User.RequireUniqueEmail = true;
 
             })
-                .AddRoles<IdentityRole<string>>()                
+                .AddRoles<IdentityRole<string>>()
                 .AddSignInManager<SignInManager<IdentityUser>>()
                 .AddEntityFrameworkStores<IdentityContext>()
                 .AddDefaultTokenProviders();
@@ -77,19 +80,35 @@ namespace MemoProject
                 .AddEntityFrameworkStores<MemoDbContext>();
             */
 
-
+            services.AddLocalization(options => { options.ResourcesPath = "Resources"; });
             services.AddControllersWithViews();
 
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IMemoService, MemoService>();
             services.AddScoped<IAdminService, AdminService>();
-            
+            services.AddScoped<ISettingsService, SettingsService>();
+
 
 
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
             services.AddLogging();
-            services.AddRazorPages();
+            services.AddRazorPages().AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+                .AddDataAnnotationsLocalization();
+            services.Configure<RequestLocalizationOptions>(
+                opt =>
+                {
+                    var supportedCultures = new[]
+                    {
+                        new CultureInfo("en"),
+                        new CultureInfo("sr")
+                    };
+                    opt.DefaultRequestCulture = new RequestCulture("en");
+                    opt.SupportedCultures = supportedCultures;
+                    opt.SupportedUICultures = supportedCultures;
+                }
+
+        );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -114,6 +133,13 @@ namespace MemoProject
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseRequestLocalization(app.ApplicationServices.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
+            //var supportedCultures = new[] { "en", "fr", "sr" };
+            //var localizationOptions = new RequestLocalizationOptions().SetDefaultCulture(supportedCultures[0])
+            //    .AddSupportedCultures(supportedCultures)
+            //    .AddSupportedUICultures(supportedCultures);
+            //app.UseRequestLocalization(localizationOptions);
 
             app.UseEndpoints(endpoints =>
             {

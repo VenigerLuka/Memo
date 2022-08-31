@@ -1,7 +1,7 @@
 ﻿using MemoProject.Data;
 using MemoProject.Helpers;
 using MemoProject.Models.DataTable;
-using MemoProject.Models.Memo;
+using MemoProject.Models.Memos;
 using MemoProject.Models.Response;
 using MemoProject.Models.Result;
 using System.Collections.Generic;
@@ -14,10 +14,10 @@ namespace MemoProject.Contracts
     {
         Task<Result<CreateMemoViewModel>> Create(string userId, CreateMemoViewModel memoDTO);
         Task<Result<NoValue>> Delete(long id);
-        Task<Result<List<MemoViewModel>>> FetchAll();
+        Task<Result<List<MemoViewModel>>> FetchAll(string userId);
         Task<Result<MemoViewModel>> FetchById(long id);
-        Task<Result<MemoViewModel>> Update(MemoViewModel memoDTO);
-        IQueryable<Memo> GetMemoQuery();
-        Task<DataTableModel> GetDataAsync(PaginatedResponse settings);
+        Task<Result<MemoViewModel>> Update(string userId, MemoViewModel memoDTO);
+        
+        Task<DataTableModel> GetDataAsync(PaginatedResponse settings, string userId);
     }
 }

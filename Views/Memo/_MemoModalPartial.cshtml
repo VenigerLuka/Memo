@@ -1,13 +1,14 @@
 ﻿@model CreateMemoViewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer localizer
 <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
     <div class=" modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-title">Create Memo</h5>
+                <h5 class="modal-title" id="modal-title">@localizer["Create Memo"]</h5>
                 <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">X</button>
             </div>
             <div class="modal-body">
-                <form method="post" id="modalForm" asp-action="Create" asp-controller="Memo">
+                <form id="modalForm" asp-action="Create" asp-controller="Memo">
                     <div class="form-group">
                         <label asp-for="Title"></label>
                         <input asp-for="Title" class="form-control" />
@@ -24,16 +25,16 @@
                         <span asp-validation-for="Tags" class="text-danger"></span>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" id="submitButton">Submit</button>
+                        <button class="btn btn-primary" id="submitButton">@localizer["Create"]</button>
                     </div>
                 </form>
             </div>
-            
+
         </div>
     </div>
 </div>
-<script>
-    onload = event => {
+@section Scripts{
+    <script>
         $("#submitButton").click(function () {
             var formdata = $("#modalForm").serialize();
             $.ajax({
@@ -42,10 +43,14 @@
                 data: formdata,
                 success: function () {
                     $('#createModal').hide();
+                    $('.modal-backdrop').remove();
+                    location.reload(true);
                 }
 
             });
         });
-    
-    };
-</script>
+
+
+
+    </script>
+}

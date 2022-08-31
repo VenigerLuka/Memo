@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace MemoProject.Models.Memo
+namespace MemoProject.Models.Memos
 {
     public class CreateMemoViewModel
     {
@@ -12,7 +12,7 @@ namespace MemoProject.Models.Memo
         public string Title { get; set; }
 
         public string Note { get; set; }
-
+        [Required]
         public string Tags { get; set; }
     }
 }

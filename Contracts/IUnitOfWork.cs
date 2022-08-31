@@ -7,8 +7,7 @@ namespace MemoProject.Repository
     {
         IMemoRepository Memo { get; }
         ITagRepository Tag { get; }
-
-        IAdminRepository Admin { get; }
+        ISettingsReposirory Setting { get; }
 
         Task CommitAsync();
     }

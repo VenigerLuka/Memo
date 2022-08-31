@@ -1,0 +1,100 @@
+﻿@model MemoProject.Models.Setting.SettingViewModel
+
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer localizer
+@inject Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Builder.RequestLocalizationOptions> locOptions
+@{
+    var culture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>();
+    var cultureList = locOptions.Value.SupportedUICultures.Select(x => new SelectListItem { Value = x.Name, Text = x.Name }).ToList();
+}
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<h4>SettingViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="SetLanguage" asp-controller="Memo"  method="post" id="settingsForm" >
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Zone" class="control-label"></label>
+                <input asp-for="Zone" class="form-control" />
+                <span asp-validation-for="Zone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <select asp-for="DateFormat" class ="form-select dateFormat" aria-label="dd/MM/yyyy">
+                    <option  value="dd/MM/yyyy">dd/MM/yyyy</option>
+                    <option value="MM/dd/yyyy">MM/dd/yyyy</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select asp-for="TimeFormat" class="form-select timeFormat" aria-label="Default select example">
+                    <option value="HH:mm:ss">HH:mm:ss</option>
+                    <option value="HH:mm">HH:mm</option>
+                    <option value="h:mm tt">h:mm tt</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="selectForm" name="culture" asp-for="@culture.RequestCulture.UICulture.Name" asp-items="cultureList"></select>
+            </div>
+            
+            
+            
+            
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" id="settingsFormButton"/>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            $("#settingsFormButton").click(function () {
+                var formdata = $("#settingsForm").serialize();
+                $.ajax({
+                    type: "POST",
+                    url: `/Settings/Edit/`,
+                    data: formdata
+
+                })
+            });
+
+            $("#selectForm").on("click", function (event) {
+                event.preventDefault();
+
+            })
+            $("#selectForm").on("onchange", function (event) {
+                event.preventDefault();
+
+            })
+            $(".dateFormat").on("click", function (event) {
+                event.preventDefault();
+
+            })
+            $(".dateFormat").on("onchange", function (event) {
+                event.preventDefault();
+
+            })
+
+            $(".timeFormat").on("click", function (event) {
+                event.preventDefault();
+
+            })
+            $(".timeFormat").on("onchange", function (event) {
+                event.preventDefault();
+
+            })
+
+
+
+        })
+    </script>
+}
+
+

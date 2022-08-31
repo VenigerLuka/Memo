@@ -2,10 +2,8 @@
 using MemoProject.Models.Result;
 using MemoProject.Repository;
 using Microsoft.AspNetCore.Identity;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MemoProject.Services
@@ -25,6 +23,7 @@ namespace MemoProject.Services
         {
             Result<IEnumerable<IdentityUser>> result = new();
             result.Value = _userManager.Users.ToList();
+            result.Succedded = true;
             return result;
         }
 
@@ -34,10 +33,6 @@ namespace MemoProject.Services
             var user = await _userManager.FindByIdAsync(userId);
             await _userManager.AddToRoleAsync(user, role);
             result.Succedded = true;
-
-
-
-
             return result;
         }
 

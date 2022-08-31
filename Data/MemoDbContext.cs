@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using MemoProject.Models.Memo;
+using MemoProject.Models.Memos;
+using MemoProject.Models.Setting;
 
 #nullable disable
 
@@ -31,7 +32,7 @@ namespace MemoProject.Data
             if (!optionsBuilder.IsConfigured)
             {
 
-                optionsBuilder.UseSqlServer("Name=ConnectionStrings:DefaultConnection");
+                optionsBuilder.UseSqlServer("Name=ConnectionStrings:MemoDbConnection");
             }
         }
 
@@ -41,7 +42,9 @@ namespace MemoProject.Data
 
         }
 
-        public DbSet<MemoProject.Models.Memo.MemoViewModel> MemoViewModel { get; set; }
+        public DbSet<MemoViewModel> MemoViewModel { get; set; }
+
+        public DbSet<SettingViewModel> SettingViewModel { get; set; }
 
 
     }

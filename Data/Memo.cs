@@ -21,5 +21,13 @@ namespace MemoProject.Data
 
 
         public virtual ICollection<Tag> Tag { get; set; }
+
+        internal void Update(string note, string title)
+        {
+            Title = title;
+            Note = note;
+        }
+		
+		
     }
 }
