@@ -2,10 +2,6 @@
 using MemoProject.Models.Setting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MemoProject.Controllers
@@ -32,9 +28,22 @@ namespace MemoProject.Controllers
         public async Task<IActionResult> Edit(SettingViewModel data)
         {
             var user = await _userManager.GetUserAsync(User);
-            await _settingsService.SetUserSettings(data, user.Id);
+            await _settingsService.SetUserSettings(data, user.Id, Request);
            
             return RedirectToAction("Inxed", "Home"); 
+        }
+        
+        public async Task<IActionResult> SetDefault()
+        {
+            var defSettings = await _settingsService.GetDefultSettingsAsync();
+            return PartialView("_DefaultSettingsPartial", defSettings);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SetDefault(SettingViewModel data)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var setting = await _settingsService.SetDefaultSettingAsync(data,user.UserName, Request);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

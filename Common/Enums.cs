@@ -23,6 +23,17 @@
             Standard
         }
 
+        public enum AuditEventEnum
+        {
+            ChangeDefaultSettings = 100,
+            ChangeUserSettings = 101,
+            DefaultSettings = 111,
+            MemoCreated = 200,
+            MemoEdited = 201,
+            MemoDeleted = 202
+        }
+
+
 
     }
 }

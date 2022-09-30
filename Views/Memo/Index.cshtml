@@ -32,7 +32,7 @@
 
             </th>
             <th>
-                Actions
+                @localizer["Actions"]
             </th>
 
         </tr>
@@ -51,12 +51,12 @@
                     @Html.DisplayFor(modelItem => item.StatusId)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreatedAt)               
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.UserId)
                 </td>
-                
+
             </tr>
         }
     </tbody>
@@ -72,35 +72,26 @@
 
 
     <script>
-        $(document).ready(function () {
-            document.body.addEventListener('click', function (event) {
-                if (event.target.id == 'deleteLink') {
-                    const id = $(event.currentTarget).data("id");
-                    bootbox.confirm("@localizer["Are you sure?"]", function (result) {
-                    if (result)
-                        window.location = `/Memo/`
-                });
-                };
-            });
-
-            $(".btn.edit").on("click", function () {
-                const id = $(event.currentTarget).data("id");
-                $("#editModalContainer").load(`/Memo/Edit/${id}`, _ => $("#editModal").modal("show"));
-            })
-            $("#deleteLink").on("click", function () {
-                var id = $(this).data('id');
+        function onDelete(memoId) {
                 bootbox.confirm("@localizer["Are you sure?"]", function (result) {
-                    if (result) {
-                        window.location = `/Memo/DeleteConfirmed/${id}`
-                        window.location.reload();
-
-                    };
+                            if (result)
+                                $.ajax({
+                                    type: "POST",
+                                    url: `/Memo/Delete/${memoId}`,
+                                    success: function () {
+                                        location.reload(true);
+                                    }
+                                });
                 });
-            });
+            };
+            function onEdit(memoId) {
+                $("#editModalContainer").load(`/Memo/Edit/${memoId}`, _ => $("#editModal").modal("show"));
+            }
+        $(document).ready(function () {
 
             $('#MemoTable').DataTable({
                 "ajax": {
-                    "url": 'Memo/GetFilteredItems',
+                    "url": '/Memo/GetFilteredItems',
                     "type": "POST",
                     "dataType": "json",
                     data: function (settings) {
@@ -116,9 +107,13 @@
                     { "data": "userId", "name": "UserId" },
                     {
                         "data": "id", "name": "Actions",
-                        "render": function (data, type, row, meta){
-                            return '<button type="button" class="btn btn-primary edit" data-id=' + data + '>Edit</button>|  <a id="deleteLink"'+data+'" data-id=' + data + '> Delete</a >'
-                        }
+                        "render": function (data, type, row, meta) {
+                            return ` <button type="button" class="btn btn-primary edit" onclick="onEdit(${data})" data-id=${data}>@localizer["Edit"]</button > |
+                                     <button onclick="onDelete(${data})" id="deleteLink" class="btn btn-primary" data-id=${data}>@localizer["Delete"]</button>`
+
+                        },
+                        "orderable": false,
+                        "searchable": false
                     }
 
 
@@ -153,7 +148,11 @@
                     }
 
                 }
+
+
             });
+
+
          });
     </script>
 }

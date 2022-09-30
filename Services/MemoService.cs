@@ -1,19 +1,21 @@
 ﻿using AutoMapper;
 using MemoProject.Contracts;
 using MemoProject.Data;
-using MemoProject.Helpers;
 using MemoProject.Models.DataTable;
 using MemoProject.Models.Memos;
 using MemoProject.Models.Response;
 using MemoProject.Models.Result;
 using MemoProject.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static MemoProject.Common.Enums;
+using Memo = MemoProject.Data.Memo;
 
 namespace MemoProject.Services
 {
@@ -34,7 +36,7 @@ namespace MemoProject.Services
             _userManager = userManager;
         }
 
-        public async Task<Result<NoValue>> Delete(long id)
+        public async Task<Result<NoValue>> Delete(long id, string userId, HttpRequest request)
         {
             Result<NoValue> result = new();
             try
@@ -48,6 +50,17 @@ namespace MemoProject.Services
                     result.Value = null;
                     return result;
                 }
+                
+                var user = await _userManager.FindByIdAsync(userId);
+                var userAgent = request.Headers["User-Agent"];
+                var audit = new Audit();
+                audit.CreatedAt = DateTime.UtcNow;
+                audit.CreatedBy = user.UserName;
+                audit.AuditEventId = (int)AuditEventEnum.MemoDeleted;
+                audit.UserAgent = userAgent;
+                audit.Value = JsonConvert.SerializeObject(toDelete);
+                await _unitOfWork.Audit.CreateAsync(audit);
+
                 await _unitOfWork.Memo.DeleteByID(id);
                 result.Succedded = true;
                 result.Message = "Deleted successfuly";
@@ -135,21 +148,33 @@ namespace MemoProject.Services
 
         }
 
-        public async Task<Result<MemoViewModel>> Update(string userId, MemoViewModel memoDTO)
+        public async Task<Result<MemoViewModel>> Update(string userId, MemoViewModel memoDTO,HttpRequest request)
         {
 
             Result<MemoViewModel> result = new();
             try
             {
                 Setting setting = await GetSettingByUserIdAsync(userId);
+
                 var memo = await _unitOfWork.Memo.FindById(memoDTO.Id);
                 memo.Update(memoDTO.Note, memoDTO.Title);
                 await _unitOfWork.Tag.DeleteByMemoAsync(memo.Id);
                 var tags = memoDTO.Tags.Split(' ');                 
                 await _unitOfWork.Tag.AddRange(tags,memo);
-                
-                await _unitOfWork.CommitAsync();
                 var editedCategory = new MemoViewModel(memo,setting.DateFormat, setting.TimeFormat);
+                editedCategory.Tags = memoDTO.Tags;
+                
+                var user = await _userManager.FindByIdAsync(userId);
+                var userAgent = request.Headers["User-Agent"];
+                var audit = new Audit();
+                audit.CreatedAt = DateTime.UtcNow;
+                audit.CreatedBy = user.UserName;
+                audit.AuditEventId = (int)AuditEventEnum.MemoEdited;
+                audit.UserAgent = userAgent;
+                audit.Value = JsonConvert.SerializeObject(editedCategory);
+                await _unitOfWork.Audit.CreateAsync(audit);
+
+                await _unitOfWork.CommitAsync();
                 
                 result.Value = editedCategory;
                 result.Message = "Update Successful!";
@@ -167,12 +192,13 @@ namespace MemoProject.Services
             }
         }
 
-        public async Task<Result<CreateMemoViewModel>> Create(string userId, CreateMemoViewModel memoDTO)
+        public async Task<Result<CreateMemoViewModel>> Create(string userId, CreateMemoViewModel memoDTO, HttpRequest request)
         {
             Result<CreateMemoViewModel> result = new();
-
             try
             {
+                var setting =await  GetSettingByUserIdAsync(userId);
+
 
                 Memo memo = new();
                 memo.UserId = userId;
@@ -181,8 +207,23 @@ namespace MemoProject.Services
                 memo.Title = memoDTO.Title;
                 memo.Note = memoDTO.Note;
 
+
                 var tagsList = memoDTO.Tags.Split(' ');
                 await _unitOfWork.Tag.AddRange(tagsList.ToList(), memo);
+
+                var memoVM = new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat);
+                memoVM.Tags = memoDTO.Tags;
+
+
+                var user = await _userManager.FindByIdAsync(userId);
+                var userAgent = request.Headers["User-Agent"];
+                var audit = new Audit();
+                audit.CreatedAt = DateTime.UtcNow;
+                audit.CreatedBy = user.UserName;
+                audit.AuditEventId = (int)AuditEventEnum.MemoCreated;
+                audit.UserAgent = userAgent;
+                audit.Value = JsonConvert.SerializeObject(memoVM);
+                await _unitOfWork.Audit.CreateAsync(audit);
 
                 //memo = _mapper.Map<Memo>(memoDTO);
 
@@ -216,6 +257,14 @@ namespace MemoProject.Services
             var user = await _userManager.FindByIdAsync(userId);
             Setting setting = await GetSettingByUserIdAsync(userId);
             var results = await _unitOfWork.Memo.FindAll();
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(setting.Zone);
+
+            foreach(var item in results)
+            {
+                item.CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(item.CreatedAt, timeZoneInfo);
+            }
+
+
             var memoVMs = new List<MemoViewModel>();
             if (!await _userManager.IsInRoleAsync(user, "Admin"))
             {
@@ -228,11 +277,13 @@ namespace MemoProject.Services
             }
             else
             {
-
                 memoVMs = results
                 .Select(memo => new MemoViewModel(memo, setting.DateFormat, setting.TimeFormat))
                 .ToList();
             }
+
+
+            
             
 
             // Total count matching search criteria 

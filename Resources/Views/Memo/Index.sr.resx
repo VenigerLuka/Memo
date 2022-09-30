@@ -138,6 +138,12 @@
   <data name="CreatedAt" xml:space="preserve">
     <value>Datum objave</value>
   </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Obriši</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Uredi</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Prva</value>
   </data>

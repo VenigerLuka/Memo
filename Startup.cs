@@ -54,6 +54,7 @@ namespace MemoProject
                              Name = IdentityConstants.ApplicationScheme
 
                          };
+                         options.LoginPath = "/Identity/Account/Login";
                      });
 
 
@@ -88,6 +89,7 @@ namespace MemoProject
             services.AddScoped<IMemoService, MemoService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISettingsService, SettingsService>();
+            services.AddScoped<IAuditService, AuditService>();
 
 
 

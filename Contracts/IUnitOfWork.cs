@@ -8,6 +8,8 @@ namespace MemoProject.Repository
         IMemoRepository Memo { get; }
         ITagRepository Tag { get; }
         ISettingsReposirory Setting { get; }
+        IDeafultSettingsRepository DefaultSettings { get; }
+        IAuditRepository Audit { get; }
 
         Task CommitAsync();
     }

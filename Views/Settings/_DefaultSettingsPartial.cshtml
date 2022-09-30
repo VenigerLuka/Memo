@@ -1,0 +1,65 @@
+﻿@model MemoProject.Models.Setting.SettingViewModel
+
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer localizer
+@inject Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Builder.RequestLocalizationOptions> locOptions
+@{
+    var culture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>();
+    var cultureList = locOptions.Value.SupportedUICultures.Select(x => new SelectListItem { Value = x.Name, Text = x.Name }).ToList();
+}
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="modal fade" id="defaultSettingsModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class=" modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">@localizer["Default Settings"]</h5>
+                <button type="button" id="closeButton" class="btn close" data-dismiss="modal" aria-label="Close">X</button>
+            </div>
+            <div class="modal-body">
+                <form id="defaultSettingForm" asp-action="SetDefault" asp-controller="Settings" method="post">
+                    <div class="form-group">
+                        <label asp-for="Zone" class="control-label"></label>
+                        <select asp-for="Zone" class="form-control">
+                            <option value="Central Europe Standard Time">Central Europe Standard Time</option>
+                            <option value="Eastern Standard Time">Eastern Standard Time</option>
+                            <option value="GMT Standard Time">GMT Standard Time</option>
+                        </select>
+                        <span asp-validation-for="Zone" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <select asp-for="DateFormat" class="form-control dateFormat" aria-label="dd/MM/yyyy">
+                            <option value="dd/MM/yyyy">dd/MM/yyyy</option>
+                            <option value="MM/dd/yyyy">MM/dd/yyyy</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select asp-for="TimeFormat" class="form-control timeFormat" aria-label="HH:mm:ss">
+                            <option value="HH:mm:ss">HH:mm:ss</option>
+                            <option value="HH:mm">HH:mm</option>
+                            <option value="h:mm tt">h:mm tt</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="defaultSelectForm" class="form-control" name="culture" asp-for="Culture" asp-items="cultureList"></select>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="@localizer["Save"]" class="btn btn-primary" id="defaultSettingsFormButton" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts
+{
+<script>
+    $("closeButton").click(function () {
+        $("#defaultSettingsModal").modal("hide");
+    });
+
+</script>
+
+}

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MemoProject.Models.Memos;
 using MemoProject.Models.Setting;
+using MemoProject.Models.Audit;
 
 #nullable disable
 
@@ -26,6 +27,8 @@ namespace MemoProject.Data
         public virtual DbSet<Status> Status { get; set; }
         public virtual DbSet<Tag> Tag { get; set; }
 
+        public virtual DbSet<DefaultSettings> DefaultSettings { get; set; }
+        public virtual DbSet<Audit> Audit { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -45,6 +48,8 @@ namespace MemoProject.Data
         public DbSet<MemoViewModel> MemoViewModel { get; set; }
 
         public DbSet<SettingViewModel> SettingViewModel { get; set; }
+
+        public DbSet<MemoProject.Models.Audit.AuditViewModel> AuditViewModel { get; set; }
 
 
     }

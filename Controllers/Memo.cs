@@ -74,7 +74,7 @@ namespace MemoProject.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (ModelState.IsValid)
             {
-                var result = await _memoService.Create(currentUser.Id, memoViewModel);
+                var result = await _memoService.Create(currentUser.Id, memoViewModel, Request);
                 if (result.Succedded)
                     return RedirectToAction(nameof(Index));
                 return Json(result.Message);
@@ -111,7 +111,7 @@ namespace MemoProject.Controllers
                 try
                 {
                     
-                    await _memoService.Update(User.GetId(), memoViewModel);
+                    await _memoService.Update(User.GetId(), memoViewModel, Request);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -139,15 +139,15 @@ namespace MemoProject.Controllers
         //    return View(result.Value);
         //}
 
-        // POST: Memo/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(long id)
+        // DELETE: Memo/5
+        [HttpPost]
+        public async Task<IActionResult> Delete(long id)
         {
             var searchResult = await _memoService.FetchById(id);
             if (searchResult.Succedded)
             {
-                var deleteResult = await _memoService.Delete(id);
+                
+                var deleteResult = await _memoService.Delete(id,User.GetId(),Request);
                 if (deleteResult.Succedded)
                     return RedirectToAction(nameof(Index));
                 return Json(deleteResult.Message);
